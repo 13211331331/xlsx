@@ -6,10 +6,15 @@ import (
 	"log"
 	"os"
 	"fmt"
+	_ "myutil"
+	"myutil"
 )
 
 func main() {
 
+	path := myutil.GetCurrentDirectory()
+
+	fmt.Println(path)
 
 	// 为log添加短文件名,方便查看行数
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
