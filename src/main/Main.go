@@ -16,6 +16,11 @@ func main() {
 
 	fmt.Println(path)
 
+	files, err := myutil.ListDir(path, ".txt")
+	fmt.Println(files, err)
+
+
+
 	// 为log添加短文件名,方便查看行数
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
 
