@@ -7,104 +7,131 @@ import (
 	"os"
 	"fmt"
 	"myutil"
+	"io/ioutil"
+	"xlsx"
+	"strings"
+	"bar"
+	//"time"
 )
 
 func main() {
 
-	myConfig := new(myutil.Config)
-	myConfig.InitConfig("c:/config.ini")
-	fmt.Println(myConfig.Read("default", "path"))
-	fmt.Printf("%v", myConfig.Mymap)
 
-	fmt.Printf("%v", myConfig.Mymap["path"])
-
-	path := myutil.GetCurrentDirectory()
-
-	fmt.Println(path)
-
-	files, err := myutil.ListDir(path, ".txt")
-	fmt.Println(files, err)
+	b := bar.New("test").NewBar("exporting ...", 10000)
+	for i := 0; i < 10000; i++ {
+		b.Add()
+		//time.Sleep(time.Second / 2000)
+	}
 
 
 
-	// 为log添加短文件名,方便查看行数
+
+
+
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
 
-	log.Println("Oracle Driver example")
+	files, _ := myutil.ListDir("D:\\export", ".sql")
+	if(len(files) < 1) {
+		log.Fatal("no sql file!")
+	}
+	mysql,_ := ioutil.ReadFile(files[0])
 
-	os.Setenv("NLS_LANG", "AMERICAN_AMERICA.UTF8")
-	os.Setenv("TNS_ADMIN", "D:/evn/instantclient-basic-windows.x64-12.2.0.1.0/instantclient_12_2/tns/")
+	//println(files[0])
 
-	// 用户名/密码@实例名  跟sqlplus的conn命令类似
-	db, err := sql.Open("oci8", "sitbas/qW5ekFKYTZI=@bas_sit")
+	fname := strings.Split((strings.Split(files[0],"."))[0], string(os.PathSeparator))[len(strings.Split((strings.Split(files[0],"."))[0], string(os.PathSeparator)))-1]
+
+	println(fname)
+
+	println(string(mysql))
+	//os.Rename(files[0], files[0]+".over")
+
+	myConfig := new(myutil.Config)
+	myConfig.InitConfig("D:/export/config.ini")
+	//fmt.Println(myConfig.Read("default", "path"))
+	//fmt.Printf("%v", myConfig.Mymap)
+
+	//path := myutil.GetCurrentDirectory()
+	//fmt.Println(path)
+	//files, err := myutil.ListDir(path, ".txt")
+	//fmt.Println(files, err)
+
+	// 为log添加短文件名,方便查看行数
+
+	os.Setenv("NLS_LANG", myConfig.Read("dbconfig", "NLS_LANG"))
+	os.Setenv("TNS_ADMIN", myConfig.Read("dbconfig", "TNS_ADMIN"))
+	db, err := sql.Open("oci8", myConfig.Read("dbconfig", "DB_USER")+"/"+myConfig.Read("dbconfig", "DB_PASS")+"@"+myConfig.Read("dbconfig", "DB_HOST"))
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
 
-	rows, err  := db.Query("select  * from fin_base_contract t ")
+
+
+	rows, err  := db.Query(string(mysql))
+
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer rows.Close();
 
 
-	// Get column names
+	excelFile := xlsx.NewFile()
+
+	sheet, err := excelFile.AddSheet(fname)
+	if err != nil {
+		fmt.Printf(err.Error())
+	}
+
+
+
 	columns, err := rows.Columns()
 	if err != nil {
 		panic(err.Error())
 	}
 
+	headrow := sheet.AddRow()
+
 	values := make([]sql.RawBytes, len(columns))
 	scanArgs := make([]interface{}, len(columns))
 	for i := range columns {
-		fmt.Println(columns[i])
+		//fmt.Println(columns[i])
 		scanArgs[i] = &values[i]
+		headrow.AddCell().Value = columns[i]
 	}
 
 
 	fmt.Println("-----------------------------------")
 
-	// Fetch rows
 	for rows.Next() {
-		// get RawBytes from data
 		err = rows.Scan(scanArgs...)
 		if err != nil {
-			panic(err.Error()) // proper error handling instead of panic in your app
+			panic(err.Error())
 		}
-		// Now do something with the data.
-		// Here we just print each column as a string.
+
+		headrow = sheet.AddRow()
 		var value string
-		for i, col := range values {
-
-			// Here we can check if the value is nil (NULL value)
-
-
+		for _, col := range values {
 			if col == nil {
 				value = "NULL"
 			} else {
 				value = string(col)
 			}
-			fmt.Print(columns[i], ": ", value + "   ")
+			//fmt.Print(columns[i], ": ", value + "   ")
+			headrow.AddCell().Value = value
 		}
-		fmt.Println("")
+		//fmt.Println("")
 	}
 	if err = rows.Err(); err != nil {
-		panic(err.Error()) // proper error handling instead of panic in your app
+		panic(err.Error())
 	}
 
 
+	err = excelFile.Save("D:/export/"+fname+".xlsx")
+	if err != nil {
+		fmt.Printf(err.Error())
+	}
 
-	/*for rows.Next() {
-		var name string
-		var customername1 string
-		rows.Scan(&name,&customername1)
-		fmt.Println(name)
-		fmt.Println(customername1)
-
-	}*/
-	rows.Close()
 }
 
 
