@@ -14,12 +14,20 @@ import (
 	//"time"
 )
 
+
+
 func main() {
+
+	var index int64 = 0
+	var countAll int64 = 0
+
+
 
 
 	b := bar.New("test").NewBar("exporting ...", 10000)
+	b.InitNumber(1000)
 	for i := 0; i < 10000; i++ {
-		b.Add()
+		//b.Add()
 		//time.Sleep(time.Second / 2000)
 	}
 
@@ -40,9 +48,11 @@ func main() {
 
 	fname := strings.Split((strings.Split(files[0],"."))[0], string(os.PathSeparator))[len(strings.Split((strings.Split(files[0],"."))[0], string(os.PathSeparator)))-1]
 
-	println(fname)
+	//println(fname)
 
-	println(string(mysql))
+
+	//println(string(mysql))
+
 	//os.Rename(files[0], files[0]+".over")
 
 	myConfig := new(myutil.Config)
@@ -73,7 +83,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer rows.Close();
+	defer rows.Close()
+
+
 
 
 	excelFile := xlsx.NewFile()
@@ -101,7 +113,12 @@ func main() {
 	}
 
 
-	fmt.Println("-----------------------------------")
+
+
+	countAll = 34
+	println(countAll)
+	go showBar(countAll, string(mysql), &index)
+
 
 	for rows.Next() {
 		err = rows.Scan(scanArgs...)
@@ -120,6 +137,7 @@ func main() {
 			//fmt.Print(columns[i], ": ", value + "   ")
 			headrow.AddCell().Value = value
 		}
+		index ++
 		//fmt.Println("")
 	}
 	if err = rows.Err(); err != nil {
@@ -131,6 +149,11 @@ func main() {
 	if err != nil {
 		fmt.Printf(err.Error())
 	}
+
+}
+func showBar(i int64, sql string, int64 *int64) {
+	var countsql = "select count(1) sum from ( "+sql+" )"
+	println(countsql)
 
 }
 

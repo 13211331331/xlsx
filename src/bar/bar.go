@@ -97,6 +97,13 @@ func (b *Bar) Add() {
 	}
 }
 
+
+func (b *Bar) InitNumber(number int) {
+	b.current = number
+
+
+}
+
 func (b *Bar) count() {
 	b.mu.Lock()
 	now := time.Now()
