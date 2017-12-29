@@ -19,17 +19,10 @@ import (
 func main() {
 
 	var index int64 = 0
-	var countAll int64 = 0
 
 
 
 
-	b := bar.New("test").NewBar("exporting ...", 10000)
-	b.InitNumber(1000)
-	for i := 0; i < 10000; i++ {
-		//b.Add()
-		//time.Sleep(time.Second / 2000)
-	}
 
 
 
@@ -115,9 +108,39 @@ func main() {
 
 
 
-	countAll = 34
-	println(countAll)
-	go showBar(countAll, string(mysql), &index)
+
+
+
+
+	go func() {
+
+		b := bar.New("test").NewBar("exporting ...", 10000)
+		b.InitNumber(1000)
+		for i := 0; i < 10000; i++ {
+			//b.Add()
+			//time.Sleep(time.Second / 2000)
+		}
+
+		var countsql = "select count(1) sum from ( " + string(mysql) + " )"
+		println(countsql)
+
+		countRow, err  := db.Query(countsql)
+
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer countRow.Close()
+
+
+		for {
+			fmt.Println(index)
+
+		}
+		println(countsql)
+
+
+	}()
+
 
 
 	for rows.Next() {
@@ -151,10 +174,6 @@ func main() {
 	}
 
 }
-func showBar(i int64, sql string, int64 *int64) {
-	var countsql = "select count(1) sum from ( "+sql+" )"
-	println(countsql)
 
-}
 
 
