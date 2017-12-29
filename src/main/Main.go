@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"fmt"
-	_ "myutil"
 	"myutil"
 )
 
