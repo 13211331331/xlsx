@@ -12,6 +12,13 @@ import (
 
 func main() {
 
+	myConfig := new(myutil.Config)
+	myConfig.InitConfig("c:/config.ini")
+	fmt.Println(myConfig.Read("default", "path"))
+	fmt.Printf("%v", myConfig.Mymap)
+
+	fmt.Printf("%v", myConfig.Mymap["path"])
+
 	path := myutil.GetCurrentDirectory()
 
 	fmt.Println(path)
