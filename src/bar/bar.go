@@ -98,6 +98,25 @@ func (b *Bar) Add() {
 }
 
 
+func (b *Bar) AddNumber(n int) {
+	b.current = (b.current+n)
+
+	lastRate := b.rate
+	lastSpeed := b.speed
+
+	b.count()
+
+	if lastRate != b.rate || lastSpeed != b.speed {
+		b.advance <- true
+	}
+
+	if b.rate >= 100 {
+		close(b.done)
+		close(b.advance)
+	}
+}
+
+
 func (b *Bar) InitNumber(number int) {
 	b.current = number
 

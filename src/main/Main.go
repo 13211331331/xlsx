@@ -11,14 +11,14 @@ import (
 	"xlsx"
 	"strings"
 	"bar"
-	//"time"
+	"time"
 )
 
 
 
 func main() {
 
-	var index int64 = 0
+	var index int = 0
 
 
 
@@ -114,12 +114,7 @@ func main() {
 
 	go func() {
 
-		b := bar.New("test").NewBar("exporting ...", 10000)
-		b.InitNumber(1000)
-		for i := 0; i < 10000; i++ {
-			//b.Add()
-			//time.Sleep(time.Second / 2000)
-		}
+
 
 		var countsql = "select count(1) sum from ( " + string(mysql) + " )"
 		println(countsql)
@@ -131,12 +126,32 @@ func main() {
 		}
 		defer countRow.Close()
 
+		var countAll int
+		for countRow.Next() {
+			countRow.Scan(&countAll)
+		}
 
-		for {
-			fmt.Println(index)
+
+
+		b := bar.New("test").NewBar("exporting ...", countAll)
+
+		b.InitNumber(index)
+		var thisindex int  = index
+
+		for  {
+			if(thisindex != index && index < countAll) {
+				var a  int  = index - thisindex
+				b.AddNumber(a)
+				thisindex = index
+				time.Sleep(time.Second / 200)
+			}
+			if(index >= countAll){
+				break
+			}
 
 		}
-		println(countsql)
+
+
 
 
 	}()
@@ -172,6 +187,7 @@ func main() {
 	if err != nil {
 		fmt.Printf(err.Error())
 	}
+
 
 }
 
