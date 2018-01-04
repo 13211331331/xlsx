@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"io/ioutil"
-
+	"fmt"
 )
 
 func substr(s string, pos, length int) string {
@@ -79,4 +79,23 @@ func WalkDir(dirPth, suffix string) (files []string, err error) {
 	})
 
 	return files, err
+}
+
+
+
+func CountToExcel(decNum int) string {
+	if (decNum < 0) {
+		return ""
+	}
+
+	var alpha_26 string = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+	if (decNum <= 26) {
+		str := fmt.Sprintf("%c", alpha_26[decNum-1])
+		return str
+	} else {
+		var i1 = decNum  % 26
+		var i2 = decNum  / 26
+		return CountToExcel(i2) + CountToExcel(i1)
+	}
 }

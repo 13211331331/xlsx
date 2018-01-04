@@ -117,6 +117,22 @@ func (b *Bar) AddNumber(n int) {
 }
 
 
+
+func (b *Bar) Complete() {
+	b.count()
+
+
+		b.advance <- true
+
+
+	if b.rate >= 100 {
+		close(b.done)
+		close(b.advance)
+	}
+}
+
+
+
 func (b *Bar) InitNumber(number int) {
 	b.current = number
 

@@ -8,25 +8,19 @@ import (
 	"fmt"
 	"myutil"
 	"io/ioutil"
-	"xlsx"
+	"excel"
 	"strings"
-	"bar"
 	"time"
+	"runtime"
 )
 
 
 
 func main() {
 
-	var index int = 0
+	var index = 0
 
-
-
-
-
-
-
-
+	runtime.GOMAXPROCS(4)
 
 
 	log.SetFlags(log.Lshortfile | log.LstdFlags)
@@ -81,12 +75,10 @@ func main() {
 
 
 
-	excelFile := xlsx.NewFile()
+	excelFile := excel.NewFile()
 
-	sheet, err := excelFile.AddSheet(fname)
-	if err != nil {
-		fmt.Printf(err.Error())
-	}
+	//sheet, err := excelFile.AddSheet(fname)
+
 
 
 
@@ -95,14 +87,20 @@ func main() {
 		panic(err.Error())
 	}
 
-	headrow := sheet.AddRow()
+	header := make(map[string]string)
+
 
 	values := make([]sql.RawBytes, len(columns))
 	scanArgs := make([]interface{}, len(columns))
 	for i := range columns {
 		//fmt.Println(columns[i])
 		scanArgs[i] = &values[i]
-		headrow.AddCell().Value = columns[i]
+		header[myutil.CountToExcel(i+1)] = columns[i]
+	}
+
+
+	for k, v := range header {
+		excelFile.SetCellValue("Sheet1", k+"1", v)
 	}
 
 
@@ -111,14 +109,8 @@ func main() {
 
 
 
-
 	go func() {
-
-
-
 		var countsql = "select count(1) sum from ( " + string(mysql) + " )"
-		println(countsql)
-
 		countRow, err  := db.Query(countsql)
 
 		if err != nil {
@@ -132,20 +124,16 @@ func main() {
 		}
 
 
-
-		b := bar.New("test").NewBar("exporting ...", countAll)
-
-		b.InitNumber(index)
 		var thisindex int  = index
-
 		for  {
-			if(thisindex != index && index < countAll) {
-				var a  int  = index - thisindex
-				b.AddNumber(a)
+			if(thisindex <= countAll) {
 				thisindex = index
-				time.Sleep(time.Second / 200)
+				//fmt.Println(thisindex)
+				str :=  fmt.Sprintf("当前%d/总数%d", thisindex,countAll)
+				log.Println(str)
+				time.Sleep(time.Second * 10)
 			}
-			if(index >= countAll){
+			if(thisindex >=countAll){
 				break
 			}
 
@@ -158,14 +146,20 @@ func main() {
 
 
 
+
+	//queue := make(map[string]string, 10000)
+
 	for rows.Next() {
+
 		err = rows.Scan(scanArgs...)
 		if err != nil {
 			panic(err.Error())
 		}
 
-		headrow = sheet.AddRow()
+
 		var value string
+		var rowindex int = 1
+		//mapVal := make(map[string]string)
 		for _, col := range values {
 			if col == nil {
 				value = "NULL"
@@ -173,7 +167,14 @@ func main() {
 				value = string(col)
 			}
 			//fmt.Print(columns[i], ": ", value + "   ")
-			headrow.AddCell().Value = value
+			var setStr string = fmt.Sprintf("%d",index+2)
+			 excelFile.SetCellValue("Sheet1", myutil.CountToExcel(rowindex)+ setStr, value)
+
+
+			//mapVal[myutil.CountToExcel(rowindex)+ setStr] = value
+			//queue <- mapVal
+
+			rowindex ++
 		}
 		index ++
 		//fmt.Println("")
@@ -183,10 +184,8 @@ func main() {
 	}
 
 
-	err = excelFile.Save("D:/export/"+fname+".xlsx")
-	if err != nil {
-		fmt.Printf(err.Error())
-	}
+	excelFile.SaveAs("D:/export/"+fname+".xlsx")
+
 
 
 }
