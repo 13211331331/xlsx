@@ -62,9 +62,6 @@ func main() {
 	}
 	defer db.Close()
 
-
-
-
 	rows, err  := db.Query(string(mysql))
 
 	if err != nil {
@@ -72,15 +69,7 @@ func main() {
 	}
 	defer rows.Close()
 
-
-
-
 	excelFile := excel.NewFile()
-
-	//sheet, err := excelFile.AddSheet(fname)
-
-
-
 
 	columns, err := rows.Columns()
 	if err != nil {
@@ -88,7 +77,6 @@ func main() {
 	}
 
 	header := make(map[string]string)
-
 
 	values := make([]sql.RawBytes, len(columns))
 	scanArgs := make([]interface{}, len(columns))
@@ -98,16 +86,9 @@ func main() {
 		header[myutil.CountToExcel(i+1)] = columns[i]
 	}
 
-
 	for k, v := range header {
 		excelFile.SetCellValue("Sheet1", k+"1", v)
 	}
-
-
-
-
-
-
 
 	go func() {
 		var countsql = "select count(1) sum from ( " + string(mysql) + " )"
@@ -138,16 +119,8 @@ func main() {
 			}
 
 		}
-
-
-
-
 	}()
 
-
-
-
-	//queue := make(map[string]string, 10000)
 
 	for rows.Next() {
 
@@ -162,18 +135,13 @@ func main() {
 		//mapVal := make(map[string]string)
 		for _, col := range values {
 			if col == nil {
-				value = "NULL"
+				value = ""
 			} else {
 				value = string(col)
 			}
 			//fmt.Print(columns[i], ": ", value + "   ")
 			var setStr string = fmt.Sprintf("%d",index+2)
 			 excelFile.SetCellValue("Sheet1", myutil.CountToExcel(rowindex)+ setStr, value)
-
-
-			//mapVal[myutil.CountToExcel(rowindex)+ setStr] = value
-			//queue <- mapVal
-
 			rowindex ++
 		}
 		index ++
@@ -183,10 +151,7 @@ func main() {
 		panic(err.Error())
 	}
 
-
 	excelFile.SaveAs("D:/export/"+fname+".xlsx")
-
-
 
 }
 
